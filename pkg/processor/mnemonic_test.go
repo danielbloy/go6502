@@ -776,3 +776,51 @@ func TestMnemonicsDetails(t *testing.T) {
 		})
 	}
 }
+
+func TestCycleCounts(t *testing.T) {
+
+	// Generate a full instruction set of known opcodes for this test.
+	instructions := make(Instructions, 0, 0xFF)
+
+	for _, mnemonic := range AllOpcodes() {
+		instruction := NewInstruction(mnemonic)
+		instructions = append(instructions, instruction)
+	}
+
+	is, err := NewInstructionSet(instructions)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	tests := []struct {
+		wantCycles uint
+		testCpuMethodConfig
+	}{
+		{
+			wantCycles: 1,
+			testCpuMethodConfig: testCpuMethodConfig{
+				name:      "START with ADC and test each cycle count.",
+				startRam:  []uint8{0, 0, 0, 0, 0, 0, 0, 0},
+				wantRam:   []uint8{0, 0, 0, 0, 0, 0, 0, 0},
+				wantState: State{PC: 1, SP: StackPointerStart},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			callback := func(cpu *Cpu) error {
+				if err := cpu.Reset(); err != nil {
+					return err
+				}
+				cycles, err := cpu.Step()
+				if cycles != tt.wantCycles {
+					t.Errorf("TestCycleCounts() did not execute the expected number of cycles, got = %v, want = %v", cycles, tt.wantCycles)
+				}
+				return err
+			}
+
+			tt.instructionSet = is
+			testCpuMethod(t, tt.testCpuMethodConfig, callback)
+		})
+	}
+}
