@@ -1,4 +1,7 @@
 # go6502
+
+Please see my website [Code Club Adventures](http://codeclubadventures.com/) for more coding materials.
+
 A virtual machine based around a 6502 processor written in Go.
 
 ### Motivation
